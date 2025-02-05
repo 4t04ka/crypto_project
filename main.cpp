@@ -720,13 +720,6 @@ int main() {
         }
 //        std::this_thread::sleep_for(std::chrono::milliseconds (100));
     }
-
-
-
-
-
-
-
 //    example.loop();
 //    auto send_message = td_api::make_object<td_api::sendMessage>();
 //    send_message->chat_id_ = -1002089771268; // Указание идентификатора чата
@@ -737,8 +730,4 @@ int main() {
 //
 //    send_message->input_message_content_ = std::move(message_content);
 //    example.send_query(std::move(send_message), {});
-
-
-
-
 }

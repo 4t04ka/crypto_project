@@ -349,7 +349,7 @@ json BING_API_ClIENT::Post_Request(const std::string& api, std::string payload) 
         curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 2L); // Тайм-аут подключения
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
 
-        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 0L);
         CURLcode res = curl_easy_perform(curl);
         std::string response;
 
@@ -431,7 +431,7 @@ json BING_API_ClIENT::Get_Ticker_Leverage(const std::string& ticker) {
     json j;
     std::string responseBuffer;
     curl_easy_setopt(curl, CURLOPT_URL, url.str().c_str());
-    std::cout<< url.str() << std::endl;
+//    std::cout<< url.str() << std::endl;
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBuffer);
 
@@ -513,7 +513,7 @@ json BING_API_ClIENT::Set_Ticker_Leverage(const std::string& ticker, int leverag
         curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 2L); // Тайм-аут подключения
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
 
-        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 0L);
         CURLcode res = curl_easy_perform(curl);
         std::string response;
 
@@ -766,9 +766,9 @@ json BING_API_ClIENT::Make_Deal(std::string ticker, std::string channel, std::st
             responce["error"] = "Пустой ответ сервера";
             return responce;
         }
-        std::cout << request.dump(4) << std::endl;
+//        std::cout << request.dump(4) << std::endl;
         json order_info = Get_Order_Info(ticker, request["data"]["order"]["orderId"].get<int64_t>());
-        std::cout << order_info.dump(4) << std::endl;
+//        std::cout << order_info.dump(4) << std::endl;
 
         request["avgPrice"] = order_info["data"]["order"]["avgPrice"].get<std::string>();
         request["time"] = order_info["data"]["order"]["time"].get<long long>();
