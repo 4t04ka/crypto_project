@@ -1,0 +1,25 @@
+//
+// Created by Александр Бондарь on 29.01.2025.
+//
+
+#ifndef EXAMPLE_CONSTANTS_H
+#define EXAMPLE_CONSTANTS_H
+
+#include <unordered_set>
+
+namespace CONSTANTS{
+    const std::string ACC_NUMBER = "2"; // нужен
+    const std::unordered_set<std::string> NOT_TRADING_LIST = {
+            "BTC-USDT", "ETH-USDT", "TON-USDT", "SOL-USDT", "TRUMPSOL-USDT", "ETHW-USDT", "XRP-USDT"
+    };
+}
+namespace CHATS{
+
+    const nlohmann::json TARGET_CHANNELS = {{"-1002233859472", "Rose"}, {"-1001288238074", "INVEST_ZONE"}, {"-1002098041238", "SCAMMER"}};
+//-1002098041238 - scammer
+//Легче проверять
+
+    const std::int64_t OUTPUT_CHAT_ID = -1002089771268;//Scams
+    const std::int64_t COMMAND_CHAT_ID = -1002499486830;//DDos -1002275205457
+}
+#endif //EXAMPLE_CONSTANTS_H

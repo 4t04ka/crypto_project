@@ -1,0 +1,31 @@
+{
+    "Bingx_API_KEY": "3lnUeibB2M4LrHxZU4ftGCMZqViZOjLnXVUoRVObPbmBz7jzoSUOI9zXo8JrDJsTPeYwfddjdRVODg1qgb5g",
+    "Bingx_API_SECRET": "9dBZLyIm6NPKGEWNNHSrG25RwuMh90DCmtOwRfi2tA5STqJvHAmsfFytwN5B9E8MJcSgocGa9Ed64ljTPA",
+    "DESCRIPTION": "Аккаунт Санька 7",
+    "NAME": "Account7",
+    "TG_ID": 22360618,
+    "TG_SECRET": "98938ec4d78716b2a0bc040f8a8012cd",
+    "channels": {
+        "Rose": {
+            "MARGIN": 40,
+            "MAX_LEVERAGE": 30,
+            "STOP_LOSS": 30,
+            "TAKE_PROFIT": 120,
+            "TRAILING_STOP": 100
+        },
+        "INVEST_ZONE": {
+            "MARGIN": 40,
+            "MAX_LEVERAGE": 30,
+            "STOP_LOSS": 30,
+            "TAKE_PROFIT": 120,
+            "TRAILING_STOP": 100
+        },
+        "SCAMMER": {
+            "MARGIN": 40,
+            "MAX_LEVERAGE": 30,
+            "STOP_LOSS": 30,
+            "TAKE_PROFIT": 120,
+            "TRAILING_STOP": 100
+        }
+    }
+}
