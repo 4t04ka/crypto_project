@@ -7,11 +7,18 @@
     "TG_SECRET": "98938ec4d78716b2a0bc040f8a8012cd",
     "balance": 99488.8046875,
     "channels": {
-        "Rose": {
-            "MARGIN": 2,
+        "INVEST_ZONE": {
+            "MARGIN": 40,
             "MAX_LEVERAGE": 30,
-            "STOP_LOSS": 29,
-            "TAKE_PROFIT": 120,
+            "STOP_LOSS": 12,
+            "TAKE_PROFIT": 30,
+            "TRAILING_STOP": 15
+        },
+        "Rose": {
+            "MARGIN": 40,
+            "MAX_LEVERAGE": 50,
+            "STOP_LOSS": 30,
+            "TAKE_PROFIT": 70,
             "TRAILING_STOP": 100
         }
     }

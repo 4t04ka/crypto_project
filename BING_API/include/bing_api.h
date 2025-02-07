@@ -17,6 +17,8 @@
 #include <fmt/core.h>
 #include <boost/optional.hpp>
 #include "../../CONFIG/config_constants.h"
+#include <thread>
+#include <mutex>
 using json = nlohmann::json;
 
 class BING_API_ClIENT{
@@ -25,6 +27,7 @@ private:
     std::string API_SECRET;
     std::string API_HOST;
     bool test;
+    std::mutex mtx;
 
 
     std::string urlEncode(const std::string& value);
@@ -35,6 +38,8 @@ private:
     void restart(bool test);
 
 public:
+    json conf_data;
+    json market_prices;
     BING_API_ClIENT(bool test);
 
     json Read_Config();
@@ -46,6 +51,7 @@ public:
     json Set_Ticker_Leverage(const std::string& ticker, int leverage, std::string side);
     float Get_Balance();
     json Get_Market_Prices();
+    void update_prices();
     json Post_Malone(std::string side, std::string ticker, float stopLoss, float quantity, float takeProfit);
     json Trailing_Stop(std::string side, std::string ticker, float quantity, float priceRate);
     float Get_Ticker_Price(std::string ticker);

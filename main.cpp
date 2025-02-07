@@ -8,7 +8,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <thread>
+
 
 
 
@@ -43,15 +43,18 @@ namespace td_api = td::td_api;
 
 class Client{
 public:
-    Client(BING_API_ClIENT cl):client(cl){
+    Client(BING_API_ClIENT &cl):client(cl){
 
-        glob_api_id = client.Read_Config()["TG_ID"].get<int64_t>();
+        glob_api_id = client.conf_data["TG_ID"].get<int64_t>();
         glob_output_chat_id = CHATS::OUTPUT_CHAT_ID;
-        glob_api_hash = client.Read_Config()["TG_SECRET"].get<std::string>();
+        glob_api_hash = client.conf_data["TG_SECRET"].get<std::string>();
         td::ClientManager::execute(td_api::make_object<td_api::setLogVerbosityLevel>(1));
         client_manager_ = std::make_unique<td::ClientManager>();
         client_id_ = client_manager_->create_client_id();
         send_query(td_api::make_object<td_api::getOption>("version"), {});
+
+
+
     }
 
     void send_text(std::int64_t chat_id, std::string text){
@@ -157,7 +160,7 @@ public:
     std::map<std::int64_t, td_api::object_ptr<td_api::user>> users_;
 
     std::map<std::int64_t, std::string> chat_title_;
-    BING_API_ClIENT client;
+    BING_API_ClIENT& client;
     std::int64_t glob_api_id ;
     std::string glob_api_hash;
     std::int64_t glob_output_chat_id;
@@ -165,7 +168,16 @@ public:
 
     void restart() {
         client_manager_.reset();
-        *this = Client(client);
+
+        glob_api_id = client.conf_data["TG_ID"].get<int64_t>();
+        glob_output_chat_id = CHATS::OUTPUT_CHAT_ID;
+        glob_api_hash = client.conf_data["TG_SECRET"].get<std::string>();
+        td::ClientManager::execute(td_api::make_object<td_api::setLogVerbosityLevel>(1));
+        client_manager_ = std::make_unique<td::ClientManager>();
+        client_id_ = client_manager_->create_client_id();
+        send_query(td_api::make_object<td_api::getOption>("version"), {});
+
+
     }
 
     void send_query(td_api::object_ptr<td_api::Function> f, std::function<void(Object)> handler) {
@@ -286,7 +298,7 @@ public:
                 break;
             }
             if (count == 3) {
-                data = client.Read_Config();
+                data = client.conf_data;
                 extra_data = data;
                 if (data["channels"].contains(word)){
                     chat = word;
@@ -308,9 +320,11 @@ public:
                 data["channels"][chat][param] = std::stoi(word);
                 try {
                     client.Overwrite_json_file(data);
+                    client.conf_data = data;
                 }
                 catch(...) {
                     client.Overwrite_json_file(extra_data);
+                    client.conf_data = extra_data;
                     throw std::logic_error("IMPOSSIBLE_WRITE_ERROR");
                 }
             }
@@ -495,11 +509,11 @@ public:
 //                    send_text(CHATS::OUTPUT_CHAT_ID, text);
 
             }
-            if (chat_id == -1002098041238){//SCAMMER
-                Scammer_post_processing(text, message_time, chat_id);
-                std::cout << "Receive message from target chat: [" << text << "]" << std::endl;
-                send_text(CHATS::OUTPUT_CHAT_ID, text);
-            }
+//            if (chat_id == -1002098041238){//SCAMMER
+//                Scammer_post_processing(text, message_time, chat_id);
+//                std::cout << "Receive message from target chat: [" << text << "]" << std::endl;
+//                send_text(CHATS::OUTPUT_CHAT_ID, text);
+//            }
         //Обработка сообщений из командного чата
         try {
             if (CHATS::COMMAND_CHAT_ID == chat_id) {
@@ -690,7 +704,7 @@ int main() {
 
 
 
-    BING_API_ClIENT client = BING_API_ClIENT(true);
+    BING_API_ClIENT client(false);
 //    clock_t now = clock();
 //    client.Make_Deal("BNB-USDT", "test_sanyka", "LONG");
 //    clock_t end = clock();
@@ -720,13 +734,6 @@ int main() {
         }
 //        std::this_thread::sleep_for(std::chrono::milliseconds (100));
     }
-
-
-
-
-
-
-
 //    example.loop();
 //    auto send_message = td_api::make_object<td_api::sendMessage>();
 //    send_message->chat_id_ = -1002089771268; // Указание идентификатора чата
@@ -737,8 +744,4 @@ int main() {
 //
 //    send_message->input_message_content_ = std::move(message_content);
 //    example.send_query(std::move(send_message), {});
-
-
-
-
 }
