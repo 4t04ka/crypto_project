@@ -7,7 +7,7 @@ json BING_API_ClIENT::Read_Config(){
     if (!file.is_open()) {
         std::cerr << "Не удалось открыть файл!" << std::endl;
         file.close();
-        restart(this->test);
+
     }
     // Загружаем JSON из файла
     json conf_data;
@@ -17,7 +17,7 @@ json BING_API_ClIENT::Read_Config(){
     } catch (const json::parse_error& e) {
         std::cerr << "Ошибка при разборе JSON: " << e.what() << std::endl;
         file.close();
-        restart(this->test);
+
     }
 
     return conf_data;
@@ -35,9 +35,9 @@ void BING_API_ClIENT::Overwrite_json_file(const json& new_data) {
 //    std::cout << "Файл успешно перезаписан." << std::endl;
 }
 
-void BING_API_ClIENT::restart(bool test){
-    *this = BING_API_ClIENT(test);
-}
+//void BING_API_ClIENT::restart(bool test){
+//    *this = BING_API_ClIENT(test);
+//}
 
 std::string BING_API_ClIENT::urlEncode(const std::string& value) {
     std::ostringstream escaped;
@@ -173,20 +173,23 @@ BING_API_ClIENT::BING_API_ClIENT(bool test):test(test){
 
     if (test) API_HOST = "https://open-api-vst.bingx.com";
     else API_HOST = "https://open-api.bingx.com";
-
-    json conf_data;
     try {
         conf_data = Read_Config();
+        market_prices = Get_Market_Prices();
     }
     catch (std::exception & e){
         std::cerr << "Общая ошибка: " << e.what() << std::endl;
         throw std::runtime_error(e.what());
     }
 
+    std::thread th(&BING_API_ClIENT::update_prices, this);
+    th.detach();
 
     API_KEY = conf_data["Bingx_API_KEY"];
     API_SECRET = conf_data["Bingx_API_SECRET"];
 }
+
+
 
 json BING_API_ClIENT::Get_Private_Request(const std::string& uri, const std::string& method) {
     // Получение текущего времени в миллисекундах
@@ -573,6 +576,16 @@ json BING_API_ClIENT::Get_Market_Prices(){
     return Get_Public_Request("/openApi/swap/v2/quote/price", "GET");
 };
 
+void BING_API_ClIENT::update_prices(){
+    while (true){
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            market_prices = Get_Market_Prices();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+//        std::cout << market_prices.dump(4) << std::endl;
+    }
+};
 json BING_API_ClIENT::Post_Malone(std::string side, std::string ticker, float stopLoss, float quantity, float takeProfit){
 
     std::string action;
@@ -618,7 +631,12 @@ json BING_API_ClIENT::Trailing_Stop(std::string side, std::string ticker, float 
 }
 
 float BING_API_ClIENT::Get_Ticker_Price(std::string ticker){
-    json json_data = Get_Market_Prices();
+    json json_data;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        json_data = market_prices;
+    }
+
     if (json_data.contains("data")) {
         for (const auto& item : json_data["data"]) {
             if (item.contains("symbol") && item["symbol"] == ticker) {
@@ -693,45 +711,49 @@ json BING_API_ClIENT::Get_Order_Info(std::string ticker, int64_t order){
 }
 
 json BING_API_ClIENT::Get_Info_(){
-    json conf = Read_Config();
-    conf["balance"] = Get_Balance();
-    return conf;
+//    json conf = Read_Config();
+    conf_data["balance"] = Get_Balance();
+    return conf_data;
 }
 
 json BING_API_ClIENT::Make_Deal(std::string ticker, std::string channel, std::string action){
+    auto start = std::chrono::high_resolution_clock::now();
+
     try {
         if (CONSTANTS::NOT_TRADING_LIST.find(ticker) != CONSTANTS::NOT_TRADING_LIST.end()){
             throw std::logic_error("NOT_TRADING_TICKER");
         }
         //Получение данных из config
-        json data_config = Read_Config();
+//        json data_config = Read_Config();
 
-        int max_leverage = data_config["channels"][channel]["MAX_LEVERAGE"];
-        int take_profit = data_config["channels"][channel]["TAKE_PROFIT"];
-        int stop_loss = data_config["channels"][channel]["STOP_LOSS"];
-        int trailing_stop = data_config["channels"][channel]["TRAILING_STOP"];
+        int max_leverage = conf_data["channels"][channel]["MAX_LEVERAGE"];
+        int take_profit = conf_data["channels"][channel]["TAKE_PROFIT"];
+        int stop_loss = conf_data["channels"][channel]["STOP_LOSS"];
+        int trailing_stop = conf_data["channels"][channel]["TRAILING_STOP"];
 
 
         float ticker_price = Get_Ticker_Price(ticker);
 //        std::cout << ticker_price << std::endl;
 
         //Получение выставленного плеча
-        json leverage_data = Get_Ticker_Leverage(ticker);
+//        json leverage_data = Get_Ticker_Leverage(ticker);
+//        Get_Market_Prices();
 
 
-        int leverage;
-        float availableVol;
 
-        if (action == "LONG") {
-            leverage = leverage_data["data"]["longLeverage"];
-            availableVol = std::stof(leverage_data["data"]["availableLongVol"].get<std::string>());
-        } else {
-            leverage = leverage_data["data"]["shortLeverage"];
-            availableVol = std::stof(leverage_data["data"]["availableShortVol"].get<std::string>());
-        }
+        int leverage = 20;
+        float position_size = conf_data["channels"][channel]["MARGIN"].get<int>() * leverage;
+
+//        if (action == "LONG") {
+//            leverage = leverage_data["data"]["longLeverage"];
+//            availableVol = std::stof(leverage_data["data"]["availableLongVol"].get<std::string>());
+//        } else {
+//            leverage = leverage_data["data"]["shortLeverage"];
+//            availableVol = std::stof(leverage_data["data"]["availableShortVol"].get<std::string>());
+//        }
 
         //Непосредственно вычисления
-        float quantity = availableVol * 0.85;
+        float quantity = (position_size * 0.9) / ticker_price;
         float takeProfit;
         float stopLoss;
         float trailingStop;
@@ -752,10 +774,17 @@ json BING_API_ClIENT::Make_Deal(std::string ticker, std::string channel, std::st
         }
 
 
-        trailingStop = ((((leverage / 1.0) / max_leverage) * trailing_stop) / 100.0) / max_leverage;
+
 
         //Открытие позиции
         json request = Post_Malone(action, ticker, stopLoss, quantity, takeProfit);
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end - start;
+        std::cout << "Elapsed time: " << elapsed_seconds.count() << " seconds\n";
+
+
+        trailingStop = ((((leverage / 1.0) / max_leverage) * trailing_stop) / 100.0) / max_leverage;
         Trailing_Stop(action, ticker, quantity, trailingStop);
 
 
