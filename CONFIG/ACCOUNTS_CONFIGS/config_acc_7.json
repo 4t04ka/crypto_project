@@ -8,17 +8,17 @@
     "balance": 99488.8046875,
     "channels": {
         "INVEST_ZONE": {
-            "MARGIN": 40,
+            "MARGIN": 5,
             "MAX_LEVERAGE": 30,
             "STOP_LOSS": 12,
             "TAKE_PROFIT": 30,
             "TRAILING_STOP": 15
         },
         "Rose": {
-            "MARGIN": 40,
+            "MARGIN": 5,
             "MAX_LEVERAGE": 50,
             "STOP_LOSS": 30,
-            "TAKE_PROFIT": 70,
+            "TAKE_PROFIT": 130,
             "TRAILING_STOP": 100
         }
     }

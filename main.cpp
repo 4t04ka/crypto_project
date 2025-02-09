@@ -86,9 +86,6 @@ public:
                 process_response(client_manager_->receive(10));
             } else {
 
-//                std::cout << "Enter action [q] quit [u] check for updates and request results [c] show chats [m <chat_id> "
-//                             "<text>] send message [me] show self [l] logout: "
-//                          << std::endl;
                 std::string line;
                 std::getline(std::cin, line);
                 std::istringstream ss(line);
@@ -506,7 +503,6 @@ public:
                         std::chrono::system_clock::now().time_since_epoch())
                         .count() - (num * 24 * 60 * 60 * 1000);
 
-                // Map для хранения данных: {Дата -> {Тикер -> {Fee, Realised}}}
                 std::map<std::string, std::map<std::string, std::pair<double, double>>> report;
 
                 for (const auto &elem : response["data"]) {
@@ -734,7 +730,7 @@ public:
     boost::optional<json> text_processing(std::string text, int64_t message_time, int64_t chat_id){
         //Обработка сообщений из target чатов
 //        if (CHATS::TARGET_CHANNELS.contains(std::to_string(chat_id))){
-            if (chat_id == -1002499486830){ //ROSE
+            if (chat_id == -1002233859472){ //ROSE
                 Rose_post_processing(text, message_time, chat_id);
                 std::cout << "Receive message from target chat: [" << text << "]" << std::endl;
                 send_text(CHATS::OUTPUT_CHAT_ID, text);
@@ -753,17 +749,12 @@ public:
         //Обработка сообщений из командного чата
         try {
             if (CHATS::COMMAND_CHAT_ID == chat_id) {
-
-//                std::thread command_th([&](){
-                    info_check(text);
-                    update_check(text);
-                    open_positions(text);
-                    close_positions_all(text);
-                    close_position_by_name(text);
-                    get_acc_histrory(text);
-//                });
-//                command_th.detach();
-
+                info_check(text);
+                update_check(text);
+                open_positions(text);
+                close_positions_all(text);
+                close_position_by_name(text);
+                get_acc_histrory(text);
             }
         }
         catch(std::exception &e) {
@@ -947,30 +938,11 @@ public:
 int main() {
 
 
-
-
-    BING_API_ClIENT client(false);
-//    auto data = client.Close_Deal("BNB-USDT");
-//    auto d = client.Get_Deals_History();
-
-//    std::cout << data.dump(4) << std::endl;
-//    std::cout << d.dump(4) << std::endl;
-//    clock_t now = clock();
-//    client.Make_Deal("BNB-USDT", "test_sanyka", "LONG");
-//    clock_t end = clock();
-//    double time_taken = double(end - now) / CLOCKS_PER_SEC;
-//    std::cout <<std::endl<< time_taken<< std::endl;
-//    cl.Post_Request("https", "open-api-vst.bingx.com", "/openApi/swap/v2/trade/order", "POST");
-
-
-
-//    -1001217702004
-
-
+    BING_API_ClIENT client(true);
     Client example(client);
 
 
-    while (true){
+    while (true) {
         if (example.need_restart_) {
             example.restart();
             continue;
@@ -988,7 +960,7 @@ int main() {
     }
 
 
-
+}
 
     //        std::this_thread::sleep_for(std::chrono::milliseconds (100));
 //    example.loop();
@@ -1001,4 +973,4 @@ int main() {
 //
 //    send_message->input_message_content_ = std::move(message_content);
 //    example.send_query(std::move(send_message), {});
-}
+

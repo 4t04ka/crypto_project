@@ -15,12 +15,12 @@ namespace CONSTANTS{
 }
 namespace CHATS{
 
-    const nlohmann::json TARGET_CHANNELS = {{"-1002499486830", "Rose"}, {"-1001288238074", "INVEST_ZONE"}};
+    const nlohmann::json TARGET_CHANNELS = {{"-1002233859472", "Rose"}, {"-1001288238074", "INVEST_ZONE"}};
 //-1002098041238 - scammer
 //{{"-1002233859472", "Rose"}, {"-1001288238074", "INVEST_ZONE"}, {"-1002098041238", "SCAMMER"}};
 //Легче проверять
 
     const std::int64_t OUTPUT_CHAT_ID = -1002089771268;//Scams
-    const std::int64_t COMMAND_CHAT_ID = -1002499486830;//DDos -1002275205457
+    const std::int64_t COMMAND_CHAT_ID = -1002275205457;//DDos -1002275205457
 }
 #endif //EXAMPLE_CONSTANTS_H

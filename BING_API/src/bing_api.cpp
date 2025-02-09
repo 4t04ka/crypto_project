@@ -2,7 +2,7 @@
 
 
 json BING_API_ClIENT::Read_Config(){
-    std::ifstream file("/Users/aleksandrbondar/CLionProjects/example/CONFIG/ACCOUNTS_CONFIGS/config_acc_"+CONSTANTS::ACC_NUMBER +".json");
+    std::ifstream file("/root/Bing_Scam/crypto_project/CONFIG/ACCOUNTS_CONFIGS/config_acc_"+CONSTANTS::ACC_NUMBER +".json");
 
     if (!file.is_open()) {
         std::cerr << "Не удалось открыть файл!" << std::endl;
@@ -25,7 +25,7 @@ json BING_API_ClIENT::Read_Config(){
 
 void BING_API_ClIENT::Overwrite_json_file(const json& new_data) {
     // Открываем файл для записи, очищая его содержимое
-    std::ofstream file("/Users/aleksandrbondar/CLionProjects/example/CONFIG/ACCOUNTS_CONFIGS/config_acc_"+CONSTANTS::ACC_NUMBER +".json", std::ios::trunc); // ios::trunc очищает файл перед записью
+    std::ofstream file("/root/Bing_Scam/crypto_project/CONFIG/ACCOUNTS_CONFIGS/config_acc_"+CONSTANTS::ACC_NUMBER +".json", std::ios::trunc); // ios::trunc очищает файл перед записью
     if (!file.is_open()) {
         throw std::runtime_error("OPEN_CONFIG_TO_REWRITE_ERROR");
 
