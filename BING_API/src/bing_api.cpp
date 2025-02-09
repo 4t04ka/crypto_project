@@ -22,6 +22,7 @@ json BING_API_ClIENT::Read_Config(){
 
     return conf_data;
 }
+
 void BING_API_ClIENT::Overwrite_json_file(const json& new_data) {
     // Открываем файл для записи, очищая его содержимое
     std::ofstream file("/Users/aleksandrbondar/CLionProjects/example/CONFIG/ACCOUNTS_CONFIGS/config_acc_"+CONSTANTS::ACC_NUMBER +".json", std::ios::trunc); // ios::trunc очищает файл перед записью
@@ -34,10 +35,6 @@ void BING_API_ClIENT::Overwrite_json_file(const json& new_data) {
     file.close();
 //    std::cout << "Файл успешно перезаписан." << std::endl;
 }
-
-//void BING_API_ClIENT::restart(bool test){
-//    *this = BING_API_ClIENT(test);
-//}
 
 std::string BING_API_ClIENT::urlEncode(const std::string& value) {
     std::ostringstream escaped;
@@ -188,8 +185,6 @@ BING_API_ClIENT::BING_API_ClIENT(bool test):test(test){
     API_KEY = conf_data["Bingx_API_KEY"];
     API_SECRET = conf_data["Bingx_API_SECRET"];
 }
-
-
 
 json BING_API_ClIENT::Get_Private_Request(const std::string& uri, const std::string& method) {
     // Получение текущего времени в миллисекундах
@@ -567,6 +562,90 @@ json BING_API_ClIENT::Set_Ticker_Leverage(const std::string& ticker, int leverag
     return responseJson;
 }
 
+
+json BING_API_ClIENT::Get_Open_Deals(){
+    json res = Get_Private_Request("/openApi/swap/v2/user/positions", "GET");
+    return res;
+}
+
+json BING_API_ClIENT::Get_Deals_History(int days){
+
+    const std::string api = "/openApi/swap/v2/user/income";
+    const std::string method = "GET";
+
+    // Получение текущего времени в миллисекундах
+    long long timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+            .count();
+
+    // Формирование строки параметров
+    std::ostringstream parameters;
+    std::string payload = fmt::format(R"({{
+                    "symbol": "{}",
+                    "startTime": "{}",
+                    "endTime": "{}"
+                    }})", "", timestamp - (days * 86400000), timestamp);
+    parameters << buildParamsEncode(payload, timestamp);
+//    parameters << "timestamp=" << timestamp;
+//    std::cout << parameters.str() << std::endl;
+    // Вычисление подписи
+    std::string sign = computeHMACSHA256(API_SECRET, parameters.str());
+    std::ostringstream url;
+    url << API_HOST << api << "?" << parameters.str() << "&signature=" << sign;
+    std::cout << url.str() << std::endl;
+
+    // Настройка cURL
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        std::cerr << "Failed to initialize cURL." << std::endl;
+        curl_easy_cleanup(curl);
+        throw std::logic_error("Failed to initialize CURL for Get Ticker Leverage");
+//        return boost::none;
+    }
+    json j;
+    std::string responseBuffer;
+    curl_easy_setopt(curl, CURLOPT_URL, url.str().c_str());
+//    std::cout<< url.str() << std::endl;
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBuffer);
+
+    struct curl_slist* headers = nullptr;
+    headers = curl_slist_append(headers, ("X-BX-APIKEY: " + API_KEY).c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    // Выполнение запроса
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK) {
+        std::cerr << "cURL error: " << curl_easy_strerror(res) << std::endl;
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+        throw std::logic_error(curl_easy_strerror(res));
+//        return boost::none;
+    } else {
+        long http_code = 0;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+        std::cout << "HTTP Response Code: " << http_code << std::endl;
+        std::cout << "Response body: " << responseBuffer << std::endl;
+        j = json::parse(responseBuffer);
+    }
+
+    // Очистка ресурсов
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    return j;
+}
+
+json BING_API_ClIENT::Close_All_Deals(){
+    std::string payload = "{}";
+    return Post_Request("/openApi/swap/v2/trade/closeAllPositions",payload);
+}
+
+json BING_API_ClIENT::Close_Deal(std::string ticker){
+    std::string payload = fmt::format(R"({{"symbol": "{}"}})", ticker);
+    return Post_Request("/openApi/swap/v2/trade/closeAllPositions",payload);
+}
+
+
 float BING_API_ClIENT::Get_Balance(){
     json res = Get_Private_Request("/openApi/swap/v3/user/balance", "GET");
     return std::stof(res["data"][0]["balance"].get<std::string>());;
@@ -586,6 +665,7 @@ void BING_API_ClIENT::update_prices(){
 //        std::cout << market_prices.dump(4) << std::endl;
     }
 };
+
 json BING_API_ClIENT::Post_Malone(std::string side, std::string ticker, float stopLoss, float quantity, float takeProfit){
 
     std::string action;
@@ -814,20 +894,4 @@ json BING_API_ClIENT::Make_Deal(std::string ticker, std::string channel, std::st
 
 
 }
-//int main() {
-//    // Ваш API-секрет
-//
-//
-////    clock_t now = clock();
-//    BING_API_ClIENT client = BING_API_ClIENT();
-//    json a = client.Post_Request("https", "open-api-vst.bingx.com", "/openApi/swap/v2/trade/order", "POST");
-//    json b = client.Get_Request("https","open-api-vst.bingx.com", "/openApi/swap/v2/quote/price", "GET");
-////    std::cout << a.dump(4) << std::endl;
-//    std::cout << b.dump(4) << std::endl;
-////    clock_t end = clock();
-////    double time_taken = double(end - now) / CLOCKS_PER_SEC;
-////    std::cout <<std::endl<< time_taken<< std::endl;
-//
-////    get_config();
-//    return 0;
-//}
+
