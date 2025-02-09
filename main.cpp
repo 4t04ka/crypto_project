@@ -8,8 +8,8 @@
 #include <memory>
 #include <sstream>
 #include <string>
-
-
+#include <thread>
+#include <iomanip>
 
 
 // overloaded
@@ -86,9 +86,6 @@ public:
                 process_response(client_manager_->receive(10));
             } else {
 
-//                std::cout << "Enter action [q] quit [u] check for updates and request results [c] show chats [m <chat_id> "
-//                             "<text>] send message [me] show self [l] logout: "
-//                          << std::endl;
                 std::string line;
                 std::getline(std::cin, line);
                 std::istringstream ss(line);
@@ -236,6 +233,7 @@ public:
         return it->second;
     }
 
+
     void info_check(std::string text){
        std::istringstream text_str(text);
        std::string word;
@@ -331,6 +329,240 @@ public:
             count++;
         }
     }
+
+    void open_positions(std::string text){
+        std::istringstream text_str(text);
+        std::string word;
+        int count = 1;
+
+        while(text_str >> word){
+            for (char &c : word) {
+                c = toupper(c);
+            }
+            if (count == 1 and word != "OPEN"){
+                break;
+            }
+
+            if (count == 2 and word.find("POSITION") != std::string::npos){
+
+                json information = client.Get_Open_Deals();
+                std::cout << information.dump(4) << std::endl;
+                std::ostringstream text_stream;
+                text_stream << "$ACC" << CONSTANTS::ACC_NUMBER << "\n\n";
+                if (!(information.contains("data") && information["data"].is_array() && information["data"].empty())) {
+                    for (const auto &deal: information["data"]) {
+                        std::string symbol = deal["symbol"].get<std::string>();
+                        symbol = symbol.substr(0, symbol.find("-USDT"));  // Удаление "-USDT"
+
+                        std::string position_side = deal["positionSide"].get<std::string>();
+                        std::string position_id = deal["positionId"].get<std::string>();
+                        double margin = std::stod(deal["margin"].get<std::string>());
+                        int leverage = deal["leverage"].get<int>();
+                        double avg_price = std::stod(deal["avgPrice"].get<std::string>());
+                        double unrealized_profit = std::stod(deal["unrealizedProfit"].get<std::string>());
+                        double realised_profit = std::stod(deal["realisedProfit"].get<std::string>());
+                        double pnl_ratio = std::stod(deal["pnlRatio"].get<std::string>());
+
+                        double total_profit = unrealized_profit + realised_profit;
+
+                        // Форматированный вывод
+                        text_stream << "┃" << symbol << " " << position_side << '\n';
+                        text_stream << "┣─────────────\n";
+                        text_stream << "┣─ ID: " << position_id << '\n';
+                        text_stream << "┣─ Margin: " << margin << " USDT\n";
+                        text_stream << "┣─ Leverage: x" << leverage << '\n';
+                        text_stream << "┣─ avgPrice: " << avg_price << '\n';
+                        text_stream << "┣─────────────\n";
+                        text_stream << "┣─ Profit: " << total_profit << " USDT\n";
+                        text_stream << "┗─ PnL: " << pnl_ratio * 100 << "%\n\n";
+                    }
+                } else text_stream << "NONE\n";
+                text = text_stream.str();
+                send_text(CHATS::OUTPUT_CHAT_ID, text);
+                break;
+            }
+            count++;
+        }
+        return;
+
+
+    }
+
+    void close_positions_all(std::string text){
+        std::istringstream text_str(text);
+        std::ostringstream mes;
+        std::string word;
+
+        while(text_str >> word){
+            for (char &c : word) {
+                c = toupper(c);
+            }
+            if (word == "CLOSE_ALL"){
+                json response = client.Close_All_Deals();
+                std::ostringstream message;
+                if (response["data"].contains("success")) {
+                    message << "🟢 Успешно закрытые сделки:\n";
+                    for (const auto& deal_id : response["data"]["success"]) {
+                        message << "┣─ ID: " << deal_id << "\n";
+                    }
+                }
+                else if (response["data"].contains("failed") && !response["data"]["failed"].is_null()) {
+                    message << "❌ Неуспешно закрытые сделки:\n";
+                    for (const auto& deal_id : response["data"]["failed"]) {
+                        message << "┣─ ID: " << deal_id << "\n";
+                    }
+                } else {
+                    message << "✅ Все сделки успешно закрыты.\n";
+                }
+//                std::cout << responce.dump(4) << std::endl;
+                send_text(CHATS::OUTPUT_CHAT_ID, message.str());
+
+            } else break;
+
+        }
+        return;
+    }
+
+    void close_position_by_name(std::string text){
+        std::istringstream text_str(text);
+        std::string word;
+        int count = 1;
+
+        while(text_str >> word){
+            for (char &c : word) {
+                c = toupper(c);
+            }
+            if (count == 1 and word != "CLOSE"){
+                break;
+            }
+
+            if (count == 2) {
+
+                json information = client.Close_Deal(word + "-USDT");
+                std::ostringstream message;
+                if (information["data"].contains("success")) {
+                    message << "🟢 Успешно закрытые сделки:\n";
+                    for (const auto& deal_id : information["data"]["success"]) {
+                        message << "┣─ ID: " << deal_id << "\n";
+                    }
+                }
+                else if (information["data"].contains("failed") && !information["data"]["failed"].is_null()) {
+                    message << "❌ Неуспешно закрытые сделки:\n";
+                    for (const auto& deal_id : information["data"]["failed"]) {
+                        message << "┣─ ID: " << deal_id << "\n";
+                    }
+                } else {
+                    message << "✅ Все сделки успешно закрыты.\n";
+                }
+                send_text(CHATS::OUTPUT_CHAT_ID, message.str());
+
+            }
+            count++;
+        }
+        return;
+
+    }
+
+    std::string timestampToDate(long long timestamp) {
+        time_t time = timestamp / 1000;
+        tm *ltm = localtime(&time);
+
+        std::ostringstream dateStream;
+        dateStream << std::setw(2) << std::setfill('0') << ltm->tm_mday << "."
+                   << std::setw(2) << std::setfill('0') << ltm->tm_mon + 1 << "."
+                   << ltm->tm_year + 1900;
+
+        return dateStream.str();
+    }
+
+    void get_acc_histrory(std::string text){
+        std::istringstream stream(text);
+        std::string word;
+        int count = 1;
+        while (stream >> word && count < 4){
+            for (char &c : word) {
+                c = toupper(c);
+            }
+            if (count == 1 && word != "HISTORY"){
+                break;
+            }
+            if (count == 2 && word != CONSTANTS::ACC_NUMBER){
+                break;
+            }
+            if (count == 3){
+                int num;
+                try{
+                    num = std::stoi(word);
+                    if (!(( 0 < num) && (num < 8))) num = 3;
+                }
+                catch(...){
+                    throw std::logic_error("IMPOSSIBLE_VALUE_ERROR");
+                }
+                json response = client.Get_Deals_History(num);
+                std::time_t num_days_ago = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch())
+                        .count() - (num * 24 * 60 * 60 * 1000);
+
+                std::map<std::string, std::map<std::string, std::pair<double, double>>> report;
+
+                for (const auto &elem : response["data"]) {
+                    std::string date = timestampToDate(elem["time"].get<long long>());
+                    std::string ticker = elem["symbol"].get<std::string>();
+                    double income = std::stod(elem["income"].get<std::string>());
+                    std::string incomeType = elem["incomeType"].get<std::string>();
+
+
+                    if (elem["time"].get<long long>() < num_days_ago) {
+                        continue;
+                    }
+
+                    // Убираем суффикс "-USDT"
+                    if (ticker.size() > 5 && ticker.substr(ticker.size() - 5) == "-USDT") {
+                        ticker = ticker.substr(0, ticker.size() - 5);
+                    }
+
+                    if (incomeType == "TRADING_FEE" || incomeType == "FUNDING_FEE" || incomeType == "INSURANCE_CLEAR") {
+                        report[date][ticker].first += income;
+                    } else if (incomeType == "REALIZED_PNL") {
+                        report[date][ticker].second += income;
+                    }
+                }
+
+                // Формирование вывода в ostringstream
+                std::ostringstream information;
+                double totalSum = 0.0;
+
+                for (const auto &dateEntry : report) {
+                    information << "\u2503" << dateEntry.first << "\n"; // \u2503 — символ боковой линии "┃"
+
+                    for (const auto &tickerEntry : dateEntry.second) {
+                        const std::string &ticker = tickerEntry.first;
+                        double fee = tickerEntry.second.first;
+                        double realised = tickerEntry.second.second;
+                        double total = fee + realised;
+
+                        information << "\u2503" << ticker << "\n"
+                                    << "\u2523\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n"
+                                    << "\u2523\u2500 Fee: " << fee << " USDT\n"
+                                    << "\u2523\u2500 Realised: " << realised << " USDT\n"
+                                    << "\u2523\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n"
+                                    << "\u2523\u2500 Total: " << total << " USDT\n"
+                                    << "\u2523\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n";
+                        totalSum += total;
+                    }
+                }
+                information << "┣─ Total (" << num << " days): " << std::fixed <<  std::setprecision(2) << totalSum << " USDT\n";
+                information << "┗───────────────\n";
+
+
+                send_text(glob_output_chat_id, information.str());
+//                std::cout << response.dump(4) << std::endl;
+            }
+            count++;
+
+        }
+    }
+
 
     void Rose_post_processing(std::string text, int64_t message_time, int64_t chat_id){
         bool flag = false;
@@ -519,6 +751,10 @@ public:
             if (CHATS::COMMAND_CHAT_ID == chat_id) {
                 info_check(text);
                 update_check(text);
+                open_positions(text);
+                close_positions_all(text);
+                close_position_by_name(text);
+                get_acc_histrory(text);
             }
         }
         catch(std::exception &e) {
@@ -702,23 +938,11 @@ public:
 int main() {
 
 
-
-
-    BING_API_ClIENT client(false);
-//    clock_t now = clock();
-//    client.Make_Deal("BNB-USDT", "test_sanyka", "LONG");
-//    clock_t end = clock();
-//    double time_taken = double(end - now) / CLOCKS_PER_SEC;
-//    std::cout <<std::endl<< time_taken<< std::endl;
-//    cl.Post_Request("https", "open-api-vst.bingx.com", "/openApi/swap/v2/trade/order", "POST");
-
-
-
-//    -1001217702004
+    BING_API_ClIENT client(true);
     Client example(client);
 
 
-    while (true){
+    while (true) {
         if (example.need_restart_) {
             example.restart();
             continue;
@@ -732,8 +956,13 @@ int main() {
         if (response.object) {
             example.process_response(std::move(response));
         }
-//        std::this_thread::sleep_for(std::chrono::milliseconds (100));
+
     }
+
+
+}
+
+    //        std::this_thread::sleep_for(std::chrono::milliseconds (100));
 //    example.loop();
 //    auto send_message = td_api::make_object<td_api::sendMessage>();
 //    send_message->chat_id_ = -1002089771268; // Указание идентификатора чата
@@ -744,4 +973,4 @@ int main() {
 //
 //    send_message->input_message_content_ = std::move(message_content);
 //    example.send_query(std::move(send_message), {});
-}
+

@@ -1,6 +1,6 @@
 {
-    "Bingx_API_KEY": "3lnUeibB2M4LrHxZU4ftGCMZqViZOjLnXVUoRVObPbmBz7jzoSUOI9zXo8JrDJsTPeYwfddjdRVODg1qgb5g",
-    "Bingx_API_SECRET": "9dBZLyIm6NPKGEWNNHSrG25RwuMh90DCmtOwRfi2tA5STqJvHAmsfFytwN5B9E8MJcSgocGa9Ed64ljTPA",
+    "Bingx_API_KEY": "ky4vjOPLiV1Fd6pP9FpwaSy668S5OUYtgOa8vm78ogy5AT6zORhgk5hie1fxJE9fsx1vWMthO7eN7BCMaXsw",
+    "Bingx_API_SECRET": "yKDaWRMJIUhseNFgLNL83OOK3MnAQJP77IJ4fzXAXrOuuagjZ72FapJQCUPP0E2tJDVMVm1nsBUlnC4pw",
     "DESCRIPTION": "Аккаунт Санька 7",
     "NAME": "Account7",
     "TG_ID": 22360618,
@@ -8,17 +8,17 @@
     "balance": 99488.8046875,
     "channels": {
         "INVEST_ZONE": {
-            "MARGIN": 40,
+            "MARGIN": 5,
             "MAX_LEVERAGE": 30,
             "STOP_LOSS": 12,
             "TAKE_PROFIT": 30,
             "TRAILING_STOP": 15
         },
         "Rose": {
-            "MARGIN": 40,
+            "MARGIN": 5,
             "MAX_LEVERAGE": 50,
             "STOP_LOSS": 30,
-            "TAKE_PROFIT": 70,
+            "TAKE_PROFIT": 130,
             "TRAILING_STOP": 100
         }
     }

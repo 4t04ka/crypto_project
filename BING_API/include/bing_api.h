@@ -35,7 +35,6 @@ private:
     static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp);
     std::string buildParams(const std::string& payloadStr, int64_t timestamp);
     std::string buildParamsEncode(const std::string& payloadStr, int64_t timestamp);
-    void restart(bool test);
 
 public:
     json conf_data;
@@ -49,6 +48,12 @@ public:
     json Post_Request(const std::string& api, std::string payload);
     json Get_Ticker_Leverage(const std::string& ticker);
     json Set_Ticker_Leverage(const std::string& ticker, int leverage, std::string side);
+
+    json Get_Open_Deals();
+    json Get_Deals_History(int days);
+    json Close_All_Deals();
+    json Close_Deal(std::string ticker);
+
     float Get_Balance();
     json Get_Market_Prices();
     void update_prices();
