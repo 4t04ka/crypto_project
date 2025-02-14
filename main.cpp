@@ -259,7 +259,8 @@ public:
                     const auto& channel_info = it.value();
 
                     text_stream << "| " << channel_name << std::endl;
-                    text_stream << "|-- Margin: " << channel_info["MARGIN"].get<int64_t>()<<"$"<< std::endl;
+                    text_stream << "|-- MARGIN: " << channel_info["MARGIN"].get<int64_t>()<<"$"<< std::endl;
+                    text_stream << "|-- DOLYA: " << channel_info["DOLYA"].get<int64_t>()<<"%"<< std::endl;
                     text_stream << "|-- LEV: " << channel_info["MAX_LEVERAGE"].get<int64_t>()<<"X"<< std::endl;
                     text_stream << "|-- TP: " << channel_info["TAKE_PROFIT"].get<int64_t>()<<"%"<< std::endl;
                     text_stream << "|-- SL: " << channel_info["STOP_LOSS"].get<int64_t>()<<"%"<< std::endl;
@@ -730,7 +731,7 @@ public:
     boost::optional<json> text_processing(std::string text, int64_t message_time, int64_t chat_id){
         //Обработка сообщений из target чатов
 //        if (CHATS::TARGET_CHANNELS.contains(std::to_string(chat_id))){
-            if (chat_id == -1002233859472){ //ROSE
+            if (chat_id == -1001217702004){ //ROSE
                 Rose_post_processing(text, message_time, chat_id);
                 std::cout << "Receive message from target chat: [" << text << "]" << std::endl;
                 send_text(CHATS::OUTPUT_CHAT_ID, text);
