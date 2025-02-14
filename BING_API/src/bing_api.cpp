@@ -179,8 +179,8 @@ BING_API_ClIENT::BING_API_ClIENT(bool test):test(test){
         throw std::runtime_error(e.what());
     }
 
-    std::thread th(&BING_API_ClIENT::update_prices, this);
-    th.detach();
+//    std::thread th(&BING_API_ClIENT::update_prices, this);
+//    th.detach();
 
     API_KEY = conf_data["Bingx_API_KEY"];
     API_SECRET = conf_data["Bingx_API_SECRET"];
@@ -714,7 +714,7 @@ float BING_API_ClIENT::Get_Ticker_Price(std::string ticker){
     json json_data;
     {
         std::lock_guard<std::mutex> lock(mtx);
-        json_data = market_prices;
+        json_data = Get_Market_Prices();
     }
 
     if (json_data.contains("data")) {
@@ -811,49 +811,46 @@ json BING_API_ClIENT::Make_Deal(std::string ticker, std::string channel, std::st
         int stop_loss = conf_data["channels"][channel]["STOP_LOSS"];
         int trailing_stop = conf_data["channels"][channel]["TRAILING_STOP"];
 
+        int availableVol, leverage;
+        int dolya  = conf_data["channels"][channel]["DOLYA"];
 
+        //Отчаянная версия
+        std::this_thread::sleep_for(std::chrono::milliseconds(7000));
         float ticker_price = Get_Ticker_Price(ticker);
-//        std::cout << ticker_price << std::endl;
+        std::cout << ticker_price << std::endl;
 
         //Получение выставленного плеча
-//        json leverage_data = Get_Ticker_Leverage(ticker);
+        json leverage_data = Get_Ticker_Leverage(ticker);
 //        Get_Market_Prices();
 
 
 
-        int leverage = 20;
-        float position_size = conf_data["channels"][channel]["MARGIN"].get<int>() * leverage;
+//        int leverage = 20;
 
-//        if (action == "LONG") {
-//            leverage = leverage_data["data"]["longLeverage"];
-//            availableVol = std::stof(leverage_data["data"]["availableLongVol"].get<std::string>());
-//        } else {
-//            leverage = leverage_data["data"]["shortLeverage"];
-//            availableVol = std::stof(leverage_data["data"]["availableShortVol"].get<std::string>());
-//        }
+//        float position_size = conf_data["channels"][channel]["MARGIN"].get<int>() * leverage;
+
+        if (action == "LONG") {
+            leverage = leverage_data["data"]["longLeverage"];
+            availableVol = std::stof(leverage_data["data"]["availableLongVol"].get<std::string>());
+        } else {
+            leverage = leverage_data["data"]["shortLeverage"];
+            availableVol = std::stof(leverage_data["data"]["availableShortVol"].get<std::string>());
+        }
 
         //Непосредственно вычисления
-        float quantity = (position_size * 0.9) / ticker_price;
+        float quantity = (availableVol * (dolya / 100.0)) / ticker_price;
         float takeProfit;
         float stopLoss;
         float trailingStop;
 
-        if (action == "LONG") { takeProfit = ticker_price * (1 + (((((leverage / 1.0) / max_leverage) * take_profit) /
-                                                                   100.0) / max_leverage));
+        if (action == "LONG") {
+            takeProfit = ticker_price * (1 + (((((leverage / 1.0) / max_leverage) * take_profit) / 100.0) / max_leverage));
+            stopLoss = ticker_price * (1.0 -(((((leverage / 1.0) / max_leverage) * stop_loss) / 100.0) / max_leverage));
         }
-        else { takeProfit = ticker_price *
-                            (1 - (((((leverage / 1.0) / max_leverage) * take_profit) / 100.0) / max_leverage));
+        else {
+            takeProfit = ticker_price * (1 - (((((leverage / 1.0) / max_leverage) * take_profit) / 100.0) / max_leverage));
+            stopLoss = ticker_price * (1.0 + (((((leverage / 1.0) / max_leverage) * stop_loss) / 100.0) / max_leverage));
         }
-
-        if (action == "LONG") { stopLoss = ticker_price * (1.0 -
-                                                           (((((leverage / 1.0) / max_leverage) * stop_loss) / 100.0) /
-                                                            max_leverage));
-        }
-        else { stopLoss = ticker_price *
-                          (1.0 + (((((leverage / 1.0) / max_leverage) * stop_loss) / 100.0) / max_leverage));
-        }
-
-
 
 
         //Открытие позиции
@@ -868,8 +865,6 @@ json BING_API_ClIENT::Make_Deal(std::string ticker, std::string channel, std::st
         Trailing_Stop(action, ticker, quantity, trailingStop);
 
 
-
-//        std::cout << req.dump(4) << std::endl;
         if (!request.contains("data")){
             json responce;
             responce["error"] = "Пустой ответ сервера";

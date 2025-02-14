@@ -1,7 +1,7 @@
 {
     "Bingx_API_KEY": "ky4vjOPLiV1Fd6pP9FpwaSy668S5OUYtgOa8vm78ogy5AT6zORhgk5hie1fxJE9fsx1vWMthO7eN7BCMaXsw",
     "Bingx_API_SECRET": "yKDaWRMJIUhseNFgLNL83OOK3MnAQJP77IJ4fzXAXrOuuagjZ72FapJQCUPP0E2tJDVMVm1nsBUlnC4pw",
-    "DESCRIPTION": "Аккаунт Санька 7",
+    "DESCRIPTION": "Timur 7 account",
     "NAME": "Account7",
     "TG_ID": 22360618,
     "TG_SECRET": "98938ec4d78716b2a0bc040f8a8012cd",
@@ -9,13 +9,15 @@
     "channels": {
         "INVEST_ZONE": {
             "MARGIN": 5,
+            "DOLYA": 20,
             "MAX_LEVERAGE": 30,
             "STOP_LOSS": 12,
             "TAKE_PROFIT": 30,
             "TRAILING_STOP": 15
         },
-        "Rose": {
+        "FAKE_ROSA": {
             "MARGIN": 5,
+            "DOLYA": 20,
             "MAX_LEVERAGE": 50,
             "STOP_LOSS": 30,
             "TAKE_PROFIT": 130,

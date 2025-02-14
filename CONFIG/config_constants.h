@@ -15,7 +15,7 @@ namespace CONSTANTS{
 }
 namespace CHATS{
 
-    const nlohmann::json TARGET_CHANNELS = {{"-1002233859472", "Rose"}, {"-1001288238074", "INVEST_ZONE"}};
+    const nlohmann::json TARGET_CHANNELS = {{"-1001217702004", "FAKE_ROSA"}, {"-1001288238074", "INVEST_ZONE"}};
 //-1002098041238 - scammer
 //{{"-1002233859472", "Rose"}, {"-1001288238074", "INVEST_ZONE"}, {"-1002098041238", "SCAMMER"}};
 //Легче проверять
