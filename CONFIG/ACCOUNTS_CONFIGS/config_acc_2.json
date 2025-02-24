@@ -8,6 +8,8 @@
     "balance": 99488.8046875,
     "channels": {
         "Rose": {
+            "DELAY": 1000,
+            "DOLYA": 20,
             "MARGIN": 2,
             "MAX_LEVERAGE": 30,
             "STOP_LOSS": 29,

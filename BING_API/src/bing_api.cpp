@@ -2,7 +2,7 @@
 
 
 json BING_API_ClIENT::Read_Config(){
-    std::ifstream file("/root/Bing_Scam/crypto_project/CONFIG/ACCOUNTS_CONFIGS/config_acc_"+CONSTANTS::ACC_NUMBER +".json");
+    std::ifstream file("/Users/alexandr/Documents/ClionProjects/Crypto_project/CONFIG/ACCOUNTS_CONFIGS/config_acc_"+CONSTANTS::ACC_NUMBER +".json");
 
     if (!file.is_open()) {
         std::cerr << "Не удалось открыть файл!" << std::endl;
@@ -25,7 +25,7 @@ json BING_API_ClIENT::Read_Config(){
 
 void BING_API_ClIENT::Overwrite_json_file(const json& new_data) {
     // Открываем файл для записи, очищая его содержимое
-    std::ofstream file("/root/Bing_Scam/crypto_project/CONFIG/ACCOUNTS_CONFIGS/config_acc_"+CONSTANTS::ACC_NUMBER +".json", std::ios::trunc); // ios::trunc очищает файл перед записью
+    std::ofstream file("/Users/alexandr/Documents/ClionProjects/Crypto_project/CONFIG/ACCOUNTS_CONFIGS/config_acc_"+CONSTANTS::ACC_NUMBER +".json", std::ios::trunc); // ios::trunc очищает файл перед записью
     if (!file.is_open()) {
         throw std::runtime_error("OPEN_CONFIG_TO_REWRITE_ERROR");
 
@@ -812,22 +812,14 @@ json BING_API_ClIENT::Make_Deal(std::string ticker, std::string channel, std::st
         int trailing_stop = conf_data["channels"][channel]["TRAILING_STOP"];
 
         int availableVol, leverage;
-        int dolya  = conf_data["channels"][channel]["DOLYA"];
+        int dolya= conf_data["channels"][channel]["DOLYA"];
 
-        //Отчаянная версия
-        std::this_thread::sleep_for(std::chrono::milliseconds(7000));
+        json leverage_data = Get_Ticker_Leverage(ticker);
         float ticker_price = Get_Ticker_Price(ticker);
         std::cout << ticker_price << std::endl;
 
         //Получение выставленного плеча
-        json leverage_data = Get_Ticker_Leverage(ticker);
-//        Get_Market_Prices();
 
-
-
-//        int leverage = 20;
-
-//        float position_size = conf_data["channels"][channel]["MARGIN"].get<int>() * leverage;
 
         if (action == "LONG") {
             leverage = leverage_data["data"]["longLeverage"];
@@ -838,7 +830,7 @@ json BING_API_ClIENT::Make_Deal(std::string ticker, std::string channel, std::st
         }
 
         //Непосредственно вычисления
-        float quantity = (availableVol * (dolya / 100.0)) / ticker_price;
+        float quantity = (availableVol * (dolya / 100.0));
         float takeProfit;
         float stopLoss;
         float trailingStop;

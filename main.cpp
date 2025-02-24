@@ -11,6 +11,8 @@
 #include <thread>
 #include <iomanip>
 
+// #include "tdutils/td/utils/port/thread.h"
+
 
 // overloaded
 namespace detail {
@@ -41,6 +43,7 @@ auto overloaded(F... f) {
 namespace td_api = td::td_api;
 
 
+
 class Client{
 public:
     Client(BING_API_ClIENT &cl):client(cl){
@@ -57,9 +60,29 @@ public:
 
     }
 
+    void get_forum_topics(std::int64_t chat_id) {
+        auto get_topics = td_api::make_object<td_api::getForumTopics>();
+        get_topics->chat_id_ = chat_id;
+
+        send_query(std::move(get_topics), [](Object obj) {
+            if (obj->get_id() == td_api::forumTopics::ID) {
+                auto topics = td::move_tl_object_as<td_api::forumTopics>(obj);
+                for (const auto& topic : topics->topics_) {
+                    std::cout << "Topic Name: " << topic->info_->name_
+                              << " | Thread ID: " << topic->info_->message_thread_id_ << std::endl;
+                }
+            }
+        });
+    }
+
     void send_text(std::int64_t chat_id, std::string text){
+
+        // td::Client::execute(td_api::make_object<td_api::setLogVerbosityLevel>(2));
+        get_forum_topics(chat_id);
+
         std::cout << "Sending message to chat " << chat_id << "..." << std::endl;
         auto send_message = td_api::make_object<td_api::sendMessage>();
+        send_message->message_thread_id_ = CHATS::OUTPUT_TOPIC_ID;
         send_message->chat_id_ = chat_id;
         auto message_content = td_api::make_object<td_api::inputMessageText>();
         message_content->text_ = td_api::make_object<td_api::formattedText>();
@@ -261,6 +284,7 @@ public:
                     text_stream << "| " << channel_name << std::endl;
                     text_stream << "|-- MARGIN: " << channel_info["MARGIN"].get<int64_t>()<<"$"<< std::endl;
                     text_stream << "|-- DOLYA: " << channel_info["DOLYA"].get<int64_t>()<<"%"<< std::endl;
+                    text_stream << "|-- DELAY: " << channel_info["DELAY"].get<int64_t>()<<"ms"<< std::endl;
                     text_stream << "|-- LEV: " << channel_info["MAX_LEVERAGE"].get<int64_t>()<<"X"<< std::endl;
                     text_stream << "|-- TP: " << channel_info["TAKE_PROFIT"].get<int64_t>()<<"%"<< std::endl;
                     text_stream << "|-- SL: " << channel_info["STOP_LOSS"].get<int64_t>()<<"%"<< std::endl;
@@ -416,7 +440,7 @@ public:
                     message << "✅ Все сделки успешно закрыты.\n";
                 }
 //                std::cout << responce.dump(4) << std::endl;
-                send_text(CHATS::OUTPUT_CHAT_ID, message.str());
+                send_text(CHATS::OUTPUT_CHAT_ID,message.str());
 
             } else break;
 
@@ -597,7 +621,7 @@ public:
         if(flag){
             json answ;
 
-            if (second == "BUY") {
+            if (second == "SHORT") {
                 std::cout << "Long" << std::endl;
                 answ = client.Make_Deal(first+"-USDT",CHATS::TARGET_CHANNELS[std::to_string(chat_id)],"LONG");
                 if (answ.contains("data")) {
@@ -608,9 +632,9 @@ public:
 //
                     send_text(glob_output_chat_id, answ_text);
                 }
-                else {send_text(glob_output_chat_id, "Error: " + answ["error"].get<std::string>());};
+                else {send_text(glob_output_chat_id,  "Error: " + answ["error"].get<std::string>());};
 
-            } else if (second == "SHORT") {
+            } else if (second == "BUY") {
                 std::cout << "short" << std::endl;
                 std::cout<< answ["data"]["activationPrice"]<<std::endl;
                 answ = client.Make_Deal(first+"-USDT",CHATS::TARGET_CHANNELS[std::to_string(chat_id)],"SHORT");
@@ -730,13 +754,15 @@ public:
 
     boost::optional<json> text_processing(std::string text, int64_t message_time, int64_t chat_id){
         //Обработка сообщений из target чатов
-//        if (CHATS::TARGET_CHANNELS.contains(std::to_string(chat_id))){
-            if (chat_id == -1001217702004){ //ROSE
+
+            if (chat_id == -1002499486830){ //ROSE
+                std::this_thread::sleep_for(std::chrono::milliseconds(client.conf_data["channels"]["FAKE_ROSA"]["DELAY"].get<int64_t>()));
                 Rose_post_processing(text, message_time, chat_id);
                 std::cout << "Receive message from target chat: [" << text << "]" << std::endl;
                 send_text(CHATS::OUTPUT_CHAT_ID, text);
             }
             if (chat_id == -1001288238074){//INVEST_ZONE
+                std::this_thread::sleep_for(std::chrono::milliseconds(client.conf_data["channels"]["INVEST_ZONE"]["DELAY"].get<int64_t>()));
                 Rusik_post_processing(text, message_time, chat_id);
                 std::cout << "Receive message from target chat: [" << text << "]" << std::endl;
 //                    send_text(CHATS::OUTPUT_CHAT_ID, text);
@@ -957,6 +983,8 @@ int main() {
         if (response.object) {
             example.process_response(std::move(response));
         }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     }
 

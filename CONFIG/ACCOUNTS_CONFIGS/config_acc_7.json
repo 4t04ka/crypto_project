@@ -10,6 +10,7 @@
         "INVEST_ZONE": {
             "MARGIN": 5,
             "DOLYA": 20,
+            "DELAY" : 6000,
             "MAX_LEVERAGE": 30,
             "STOP_LOSS": 12,
             "TAKE_PROFIT": 30,
@@ -18,6 +19,7 @@
         "FAKE_ROSA": {
             "MARGIN": 5,
             "DOLYA": 20,
+            "DELAY" : 6000,
             "MAX_LEVERAGE": 50,
             "STOP_LOSS": 30,
             "TAKE_PROFIT": 130,
